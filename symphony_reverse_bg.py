@@ -23,8 +23,8 @@ def foldersave():
     if (not os.path.exists(path)) or (not os.path.isdir(path)):
         print("フォルダが存在しません。最初に戻ります!!\n")
         return
-    for path_ in os.listdir:
-        if os.path.isfile(path_):
+    for path_ in os.listdir(path):
+        if os.path.isfile(os.path.join(path, path_)):
             pass_list.append(path_)
     sorted(pass_list)
     pass_list = [path + '/' + i for i in pass_list]
@@ -63,7 +63,7 @@ def foldersave():
         #保存
         df_reverse.to_csv(pass_list[i][:-4] + '_reversed.txt', index=False, header=False)
         print(i + 1, '番目のデータが保存されました')
-    print(f"場所は　{path}　です")
+    print(f"保存場所は　{path}　です")
 
 def filesave():
     print('iHR上の中心波長：', end='')
