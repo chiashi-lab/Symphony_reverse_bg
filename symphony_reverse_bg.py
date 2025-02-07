@@ -113,14 +113,75 @@ def filesave():
     print('データが保存されました')
     print(f"場所は　{path[:-4]}_reversed.txt　です")
 
+def scanfoldersave():
+    print("ihr320分光器の中心波長を入力してください")
+    try:
+        center_wl = float(input())
+    except Exception as e:
+        print(e)
+        print("数字を入力してください。最初に戻ります!!\n")
+        return
+    print("backgroundファイルのパスを入力してください")
+    try:
+        bg_path = str(input())
+        if "\"" in bg_path:
+            bg_path = bg_path.strip('"')
+        bg_df = pd.read_csv(bg_path, sep='\t', comment='#', header=None)
+    except Exception as e:
+        print(e)
+        print("backgroundファイルが存在しません。最初に戻ります!!\n")
+        return
+    print('データが保存されているフォルダのパスを入力してください：')
+    folder_path = str(input())
+    if "\"" in folder_path:
+        folder_path = folder_path.strip('"')
+    if (not os.path.exists(folder_path)) or (not os.path.isdir(folder_path)):
+        print("フォルダが存在しません。最初に戻ります!!\n")
+        return
+    folderdict = {}
+    for foldername in os.listdir(folder_path):
+        if not os.path.isdir(os.path.join(folder_path, foldername)):
+            continue
+        id = int(foldername.split('_')[0][3:])#_で分けて一番前 → さらに文字列posを飛ばす
+        folderdict[id] = foldername
+
+    folderdict = dict(sorted(folderdict.items(), key=lambda x: x[0]))
+
+    for id, foldername in folderdict.items():
+        for filename in os.listdir(os.path.join(folder_path, foldername)):
+            if filename == '.DS_Store' or filename == 'log.txt' or "reversed.txt" in filename:
+                continue
+            filepath = os.path.join(folder_path, foldername, filename)
+            try:
+                df = pd.read_csv(filepath, sep='\t', comment='#', header=None)
+            except:
+                print(f"{filepath}はCSVファイルではありません。次のファイルを読み込みます")
+                continue
+            df[1] = df[1] - bg_df[1]
+            df_reverse = df.iloc[::-1]
+                    #x軸にラフな値を代入する処理
+            list_wl = []
+            # start_wl = center_wl - 319 #319は過去の結果からの概算結果
+            start_wl = center_wl - 246  #246は過去の結果からの概算結果
+            delta_wl = 509.5 / 511
+            for j in range(512):
+                list_wl.append(start_wl + delta_wl * j)
+            df_reverse[0] = list_wl
+            savepath = os.path.join(folder_path+'_reverse', foldername, filename[:-4] + '_reversed.txt')
+            if not os.path.exists(os.path.join(folder_path+'_reverse', foldername)):
+                os.makedirs(os.path.join(folder_path+'_reverse', foldername))
+            df_reverse.to_csv(savepath, index=False, header=False)
+            print(f"{filepath}を処理．{savepath}に保存しました")
 if __name__ =='__main__':
     while True:
-        print("フォルダ内のファイルを一括で処理したい場合は「d」、一つのファイルだけを処理したい場合は「i」を入力してください")
+        print("フォルダ内のファイルを一括で処理したい場合は「d」\n一つのファイルだけを処理したい場合は「i」\nラインスキャン測定のデータを処理したい場合には「lsd」を入力してください")
         mode = input()
         if mode == 'd':
             foldersave()
         elif mode == 'i':
             filesave()
+        elif mode == 'lsd':
+            scanfoldersave()
         else:
             print('正しく入力してください。最初に戻ります!!\n')
         time.sleep(1.5)
