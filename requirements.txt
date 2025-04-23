@@ -1,1 +1,5 @@
+numpy
 pandas
+matplotlib
+tkinterdnd2
+git+https://github.com/chiashi-lab/DataLoader
