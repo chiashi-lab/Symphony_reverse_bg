@@ -18,7 +18,7 @@ def foldersave():
         return
 
     print('データが保存されているフォルダのパスを入力してください：')
-    path = str(input())
+    path = str(input().strip('"'))
     pass_list = []
     if (not os.path.exists(path)) or (not os.path.isdir(path)):
         print("フォルダが存在しません。最初に戻ります!!\n")
