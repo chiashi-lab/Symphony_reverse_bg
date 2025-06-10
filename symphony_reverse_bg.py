@@ -176,7 +176,58 @@ def scanfoldersave():
             print(f"{filepath}を処理．{savepath}に保存しました")
 
 def everysave():
-    pass
+    print('iHR上の中心波長：', end='')
+    try:
+        center_wl = int(input())
+    except:
+        print('数字だけを正しく入力してください。最初に戻ります!!')
+        return
+
+    print('データが保存されているフォルダのパスを入力してください：')
+    path = str(input().strip('"'))
+    path_list = []
+    Datapath_2_Bgpath_dict = {} # データのパスをキーとして対応するバックグランドのパスを値とする辞書
+
+    if (not os.path.exists(path)) or (not os.path.isdir(path)):
+        print("フォルダが存在しません。最初に戻ります!!\n")
+        return
+    for filename in os.listdir(path):
+        if os.path.isfile(os.path.join(path, filename)):
+            if 'log' in filename:
+                print(f"{filename}はログファイルとして認識されました。処理をスキップします")
+                continue
+            if 'background' in filename:
+                continue
+            if not os.path.exists(os.path.join(path, "background_" + filename)):
+                print(f"{filename}に対応するバックグラウンドファイルが存在しません。処理をスキップします")
+                continue
+            path_list.append(os.path.join(path, filename))
+            Datapath_2_Bgpath_dict[os.path.join(path, filename)] = os.path.join(path, "background_" + filename)
+
+
+    for i, filepath in enumerate(path_list):
+        df = pd.read_csv(filepath, sep='\t', header=None)
+        df_bg = pd.read_csv(Datapath_2_Bgpath_dict[filepath], sep='\t', header=None)
+
+        # backgroundを引く処理
+        df[1] = df[1] - df_bg[1]
+
+        #x軸を反転させる処理
+        df_reverse = df.iloc[::-1]
+
+        #x軸にラフな値を代入する処理
+        list_wl = []
+        # start_wl = center_wl - 319 #319は過去の結果からの概算結果
+        start_wl = center_wl - 246  #246は過去の結果からの概算結果
+        delta_wl = 509.5 / 511
+        for j in range(pixels):
+            list_wl.append(start_wl + delta_wl * j)
+        df_reverse[0] = list_wl
+
+        #保存
+        df_reverse.to_csv(os.path.splitext(filepath)[0] + '_reversed.txt', index=False, header=False)
+        print(i + 1, '番目のデータが保存されました')
+    print(f"保存場所は　{path}　です")
 
 if __name__ =='__main__':
     while True:
