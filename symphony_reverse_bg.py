@@ -19,16 +19,18 @@ def foldersave():
 
     print('データが保存されているフォルダのパスを入力してください：')
     path = str(input().strip('"'))
-    pass_list = []
+    filename_list = []
     if (not os.path.exists(path)) or (not os.path.isdir(path)):
         print("フォルダが存在しません。最初に戻ります!!\n")
         return
-    for path_ in os.listdir(path):
-        if os.path.isfile(os.path.join(path, path_)):
-            pass_list.append(path_)
-    sorted(pass_list)
-    pass_list = [path + '/' + i for i in pass_list]
-    numberofdata = len(pass_list)
+    for filename in os.listdir(path):
+        if os.path.isfile(os.path.join(path, filename)):
+            if 'log' in filename:
+                print(f"{filename}はログファイルとして認識されました。処理をスキップします")
+                continue
+            filename_list.append(filename)
+    sorted(filename_list)
+    path_list = [os.path.join(path, filename) for filename in filename_list]
 
     print('backgroundはありますか？　y or n：', end='')
     bg_judge = input()
@@ -37,12 +39,12 @@ def foldersave():
         pass_bg = input().strip('"')
         df_bg = pd.read_csv(pass_bg, sep='\t', header=None)
     elif bg_judge != 'n':
-        print('正しく入力してください。最初に戻ります!!')
+        print('yまたはnを正しく入力してください。最初に戻ります!!')
         return
 
 
-    for i in range(numberofdata):
-        df = pd.read_csv(pass_list[i], sep='\t', header=None)
+    for i, filepath in enumerate(path_list):
+        df = pd.read_csv(filepath, sep='\t', header=None)
 
         # backgroundを引く処理
         if bg_judge == 'y':
@@ -61,7 +63,7 @@ def foldersave():
         df_reverse[0] = list_wl
 
         #保存
-        df_reverse.to_csv(pass_list[i][:-4] + '_reversed.txt', index=False, header=False)
+        df_reverse.to_csv(os.path.splitext(filepath)[0] + '_reversed.txt', index=False, header=False)
         print(i + 1, '番目のデータが保存されました')
     print(f"保存場所は　{path}　です")
 
@@ -172,9 +174,17 @@ def scanfoldersave():
                 os.makedirs(os.path.join(folder_path+'_reverse', foldername))
             df_reverse.to_csv(savepath, index=False, header=False)
             print(f"{filepath}を処理．{savepath}に保存しました")
+
+def everysave():
+    pass
+
 if __name__ =='__main__':
     while True:
-        print("フォルダ内のファイルを一括で処理したい場合は「d」\n一つのファイルだけを処理したい場合は「i」\nラインスキャン測定のデータを処理したい場合には「lsd」を入力してください")
+        print("フォルダ内のファイルを一括で処理したい場合は「d」\n" \
+        "一つのファイルだけを処理したい場合は「i」\n" \
+        "ラインスキャン測定のデータを処理したい場合には「lsd」を入力してください\n" \
+        "都度バックグラウンドを引きたい場合は「ev」を入力してください\n" \
+        "終了したい場合は「q」を入力してください")
         mode = input()
         if mode == 'd':
             foldersave()
@@ -182,6 +192,11 @@ if __name__ =='__main__':
             filesave()
         elif mode == 'lsd':
             scanfoldersave()
+        elif mode == 'ev':
+            everysave()
+        elif mode == 'q':
+            print('終了します。')
+            break
         else:
             print('正しく入力してください。最初に戻ります!!\n')
         time.sleep(1.5)
